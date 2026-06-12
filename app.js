@@ -103,6 +103,11 @@ function taskDone(task) {
   return task.assignees.length ? task.assignees.every((id) => task.completedBy.includes(id)) : task.done;
 }
 
+function shortMemberName(name) {
+  const compact = name.replace(/\s+/g, "");
+  return compact.slice(0, 2);
+}
+
 function taskRow(task) {
   const assignedMembers = task.assignees.map((id) => members.find((item) => item.id === id)).filter(Boolean);
   const soon = task.due && task.due <= dateOffset(1);
@@ -110,17 +115,15 @@ function taskRow(task) {
   const done = taskDone(task);
   const completion = assignedMembers.length ? assignedMembers.map((member) => `<label class="completion-item">
     <input class="task-checkbox" type="checkbox" data-action="toggle-member" data-member-id="${member.id}" data-id="${task.id}" ${task.completedBy.includes(member.id) ? "checked" : ""}>
-    ${escapeHtml(member.name)}
-  </label>`).join("") : `<label class="completion-item"><input class="task-checkbox" type="checkbox" data-action="toggle" data-id="${task.id}" ${task.done ? "checked" : ""}>全員</label>`;
-  const avatars = assignedMembers.length ? assignedMembers.map(avatar).join("") : avatar(members[0]);
+    <span class="completion-name avatar-${member.color}">${escapeHtml(shortMemberName(member.name))}</span>
+  </label>`).join("") : `<label class="completion-item"><input class="task-checkbox" type="checkbox" data-action="toggle" data-id="${task.id}" ${task.done ? "checked" : ""}><span class="completion-name avatar-everyone">全員</span></label>`;
   return `<div class="task-row ${routine ? "routine-row" : "todo-row"} ${done ? "done" : ""}">
     <div class="task-main">
-      <div class="task-title-line"><span class="task-name">${escapeHtml(task.name)}</span></div>
       <div class="completion-list">${completion}</div>
+      <span class="task-name">${escapeHtml(task.name)}</span>
     </div>
-    <div class="assignee task-assignee" aria-label="担当者">${avatars}</div>
     ${routine ? "" : `<div class="due ${soon && !done ? "soon" : ""}">${formatDue(task.due)}</div>`}
-    <div class="order-buttons"><button class="order-button" data-action="up" data-id="${task.id}" title="上へ">↑</button><button class="order-button" data-action="down" data-id="${task.id}" title="下へ">↓</button></div>
+    <div class="order-buttons"><button class="order-button" data-action="up" data-id="${task.id}" title="上へ" aria-label="上へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button class="order-button" data-action="down" data-id="${task.id}" title="下へ" aria-label="下へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
     <button class="delete-button" data-action="delete" data-id="${task.id}" aria-label="${escapeHtml(task.name)}を削除" title="削除">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg>
     </button>
