@@ -1,9 +1,5 @@
 let members = [
   { id: "everyone", name: "全員", initial: "全", color: "everyone" },
-  { id: "tanaka", name: "田中 太郎", initial: "田", color: "blue" },
-  { id: "sato", name: "佐藤 花子", initial: "佐", color: "pink" },
-  { id: "suzuki", name: "鈴木 一郎", initial: "鈴", color: "yellow" },
-  { id: "yamamoto", name: "山本 拓也", initial: "山", color: "purple" },
 ];
 
 const defaultTasks = [
@@ -193,6 +189,27 @@ function openNameModal(type) {
 
 function closeNameModal() { el("nameModalBackdrop").hidden = true; }
 
+function renderMemberEditor() {
+  const editableMembers = members.filter((member) => member.id !== "everyone");
+  el("memberEditorList").innerHTML = editableMembers.length ? editableMembers.map((member) => `
+    <div class="member-editor-row" data-member-id="${member.id}">
+      ${avatar(member)}
+      <input value="${escapeHtml(member.name)}" maxlength="30" aria-label="${escapeHtml(member.name)}の名前" />
+      <div class="member-editor-actions">
+        <button type="button" data-member-action="rename" title="名前を保存" aria-label="${escapeHtml(member.name)}の名前を保存">✓</button>
+        <button type="button" class="member-delete" data-member-action="delete" title="削除" aria-label="${escapeHtml(member.name)}を削除">×</button>
+      </div>
+    </div>`).join("") : "<p>登録されているメンバーはいません。</p>";
+  el("addMemberForm").hidden = editableMembers.length >= 4;
+}
+
+function openMemberModal() {
+  renderMemberEditor();
+  el("memberModalBackdrop").hidden = false;
+}
+
+function closeMemberModal() { el("memberModalBackdrop").hidden = true; }
+
 document.querySelectorAll("[data-todo-filter]").forEach((button) => button.addEventListener("click", () => {
   state.todoFilter = button.dataset.todoFilter;
   document.querySelectorAll("[data-todo-filter]").forEach((item) => item.classList.toggle("active", item === button));
@@ -248,7 +265,37 @@ el("modalBackdrop").addEventListener("click", (event) => { if (event.target === 
 el("closeNameModalButton").addEventListener("click", closeNameModal);
 el("nameModalBackdrop").addEventListener("click", (event) => { if (event.target === el("nameModalBackdrop")) closeNameModal(); });
 document.querySelectorAll("[data-edit-name]").forEach((button) => button.addEventListener("click", () => openNameModal(button.dataset.editName)));
-document.addEventListener("keydown", (event) => { if (event.key === "Escape") { closeModal(); closeNameModal(); } });
+el("editMembersButton").addEventListener("click", openMemberModal);
+el("closeMemberModalButton").addEventListener("click", closeMemberModal);
+el("memberModalBackdrop").addEventListener("click", (event) => { if (event.target === el("memberModalBackdrop")) closeMemberModal(); });
+el("addMemberForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    await TeamSync.addMember(el("newMemberNameInput").value.trim());
+    el("newMemberNameInput").value = "";
+    renderMemberEditor();
+    showToast("メンバーを追加しました");
+  } catch (error) { showToast(`追加できませんでした: ${error.message}`); }
+});
+el("memberEditorList").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-member-action]");
+  if (!button) return;
+  const row = button.closest("[data-member-id]");
+  const memberId = row.dataset.memberId;
+  const memberName = row.querySelector("input").value.trim();
+  try {
+    if (button.dataset.memberAction === "rename") {
+      if (!memberName) throw new Error("名前を入力してください");
+      await TeamSync.renameMember(memberId, memberName);
+      showToast("メンバー名を変更しました");
+    } else {
+      await TeamSync.deleteMember(memberId);
+      showToast("メンバーを削除しました");
+    }
+    renderMemberEditor();
+  } catch (error) { showToast(`変更できませんでした: ${error.message}`); }
+});
+document.addEventListener("keydown", (event) => { if (event.key === "Escape") { closeModal(); closeNameModal(); closeMemberModal(); } });
 function updateShareModal(status) {
   el("shareOffline").hidden = status.enabled;
   el("createTeamForm").hidden = !status.needsCreate;

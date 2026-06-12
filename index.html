@@ -24,7 +24,13 @@
         </div>
 
         <div class="team-block">
-          <div class="team-heading"><span>メンバー</span><button class="small-button" id="inviteButton">＋ 招待</button></div>
+          <div class="team-heading">
+            <span>メンバー</span>
+            <div class="member-heading-actions">
+              <button class="edit-name-button" id="editMembersButton" aria-label="メンバーを編集" title="メンバーを編集">✎</button>
+              <button class="small-button" id="inviteButton">＋ 招待</button>
+            </div>
+          </div>
           <div id="memberList" class="member-list"></div>
         </div>
 
@@ -112,6 +118,22 @@
           <label>同僚への招待リンク<div class="copy-row"><input id="inviteLinkInput" readonly /><button class="primary-button" id="copyInviteButton" type="button">コピー</button></div></label>
           <p class="share-help">このリンクを開いた同僚は、名前を登録して同じチームへ参加できます。</p>
         </div>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="memberModalBackdrop" hidden>
+      <section class="modal member-modal" role="dialog" aria-modal="true" aria-labelledby="memberModalTitle">
+        <button class="modal-close" id="closeMemberModalButton" aria-label="閉じる">×</button>
+        <h2 id="memberModalTitle">メンバーを編集</h2>
+        <p>担当者として表示するメンバーを最大4名まで登録できます。</p>
+        <div id="memberEditorList" class="member-editor-list"></div>
+        <form id="addMemberForm">
+          <label>メンバーを追加
+            <div class="member-add-row">
+              <input id="newMemberNameInput" required maxlength="30" placeholder="例：山田 花子" />
+              <button class="primary-button" type="submit">追加</button>
+            </div>
+          </label>
+        </form>
       </section>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>

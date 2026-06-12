@@ -12,17 +12,19 @@ create table if not exists public.minna_teams (
 
 create table if not exists public.minna_members (
   team_id uuid not null references public.minna_teams(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
+  member_id uuid not null default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
   display_name text not null,
   joined_at timestamptz not null default now(),
-  primary key (team_id, user_id)
+  primary key (team_id, member_id),
+  unique (team_id, user_id)
 );
 
 create table if not exists public.minna_tasks (
   id bigint not null,
   team_id uuid not null references public.minna_teams(id) on delete cascade,
   name text not null,
-  assigned_to uuid references auth.users(id) on delete set null,
+  assigned_to uuid,
   due_date date,
   task_type text not null check (task_type in ('todo', 'routine')),
   done boolean not null default false,
@@ -66,7 +68,7 @@ declare new_team public.minna_teams;
 begin
   insert into public.minna_teams(name, app_name, app_mark, created_by)
   values (team_name, app_name, app_mark, auth.uid()) returning * into new_team;
-  insert into public.minna_members(team_id, user_id, display_name) values (new_team.id, auth.uid(), member_name);
+  insert into public.minna_members(team_id, member_id, user_id, display_name) values (new_team.id, auth.uid(), auth.uid(), member_name);
   return query select new_team.id, new_team.invite_code;
 end $$;
 
@@ -79,7 +81,7 @@ begin
   select * into found_team from public.minna_teams where minna_teams.invite_code = invite;
   if found_team.id is null then raise exception '招待リンクが無効です'; end if;
   if (select count(*) from public.minna_members where team_id = found_team.id) >= 4 then raise exception 'メンバー数は4人までです'; end if;
-  insert into public.minna_members(team_id, user_id, display_name) values (found_team.id, auth.uid(), member_name)
+  insert into public.minna_members(team_id, member_id, user_id, display_name) values (found_team.id, auth.uid(), auth.uid(), member_name)
   on conflict (team_id, user_id) do update set display_name = excluded.display_name;
   return query select found_team.id, found_team.invite_code;
 end $$;
@@ -88,6 +90,42 @@ revoke execute on function public.create_minna_team(text, text, text, text) from
 revoke execute on function public.join_minna_team(text, text) from public;
 grant execute on function public.create_minna_team(text, text, text, text) to authenticated;
 grant execute on function public.join_minna_team(text, text) to authenticated;
+
+create or replace function public.add_minna_member(target_team uuid, member_name text)
+returns void language plpgsql security definer set search_path = public
+as $$
+begin
+  if not public.is_minna_member(target_team) then raise exception 'このチームを編集できません'; end if;
+  if (select count(*) from public.minna_members where team_id = target_team) >= 4 then raise exception 'メンバー数は4人までです'; end if;
+  insert into public.minna_members(team_id, display_name) values (target_team, member_name);
+end $$;
+
+create or replace function public.rename_minna_member(target_team uuid, target_member uuid, member_name text)
+returns void language plpgsql security definer set search_path = public
+as $$
+begin
+  if not public.is_minna_member(target_team) then raise exception 'このチームを編集できません'; end if;
+  update public.minna_members set display_name = member_name where team_id = target_team and member_id = target_member;
+end $$;
+
+create or replace function public.delete_minna_member(target_team uuid, target_member uuid)
+returns void language plpgsql security definer set search_path = public
+as $$
+begin
+  if not public.is_minna_member(target_team) then raise exception 'このチームを編集できません'; end if;
+  if (select user_id from public.minna_members where team_id = target_team and member_id = target_member) is not null then
+    raise exception '招待リンクで参加した本人は削除できません';
+  end if;
+  update public.minna_tasks set assigned_to = null where team_id = target_team and assigned_to = target_member;
+  delete from public.minna_members where team_id = target_team and member_id = target_member;
+end $$;
+
+revoke execute on function public.add_minna_member(uuid, text) from public;
+revoke execute on function public.rename_minna_member(uuid, uuid, text) from public;
+revoke execute on function public.delete_minna_member(uuid, uuid) from public;
+grant execute on function public.add_minna_member(uuid, text) to authenticated;
+grant execute on function public.rename_minna_member(uuid, uuid, text) to authenticated;
+grant execute on function public.delete_minna_member(uuid, uuid) to authenticated;
 
 alter publication supabase_realtime add table public.minna_tasks;
 alter publication supabase_realtime add table public.minna_members;

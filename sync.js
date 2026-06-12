@@ -15,7 +15,7 @@ window.TeamSync = (() => {
     user = data.user;
     const inviteCode = new URLSearchParams(location.search).get("invite");
     const savedTeam = localStorage.getItem("minna-team-id");
-    if (inviteCode) return { enabled: true, needsJoin: true, inviteCode };
+    if (inviteCode && inviteCode !== localStorage.getItem("minna-invite-code")) return { enabled: true, needsJoin: true, inviteCode };
     if (!savedTeam) return { enabled: true, needsCreate: true };
     team = { id: savedTeam, invite_code: localStorage.getItem("minna-invite-code") };
     await subscribe();
@@ -64,7 +64,7 @@ window.TeamSync = (() => {
     if (taskError || memberError || teamError) throw taskError || memberError || teamError;
     onChange?.({
       tasks: taskRows.map((row) => ({ id: row.id, name: row.name, assignee: row.assigned_to || "everyone", due: row.due_date || "", type: row.task_type, done: row.done })),
-      members: memberRows.map((row, index) => ({ id: row.user_id, name: row.display_name, initial: row.display_name.slice(0, 1), color: ["blue", "pink", "yellow", "purple"][index % 4] })),
+      members: memberRows.map((row, index) => ({ id: row.member_id || row.user_id, name: row.display_name, initial: row.display_name.slice(0, 1), color: ["blue", "pink", "yellow", "purple"][index % 4] })),
       names: { mark: teamRow.app_mark, app: teamRow.app_name, team: teamRow.name },
     });
   }
@@ -97,9 +97,30 @@ window.TeamSync = (() => {
     if (error) throw error;
   }
 
+  async function addMember(name) {
+    if (!team) throw new Error("先に共有チームへ接続してください");
+    const { error } = await client.rpc("add_minna_member", { target_team: team.id, member_name: name });
+    if (error) throw error;
+    await refresh();
+  }
+
+  async function renameMember(memberId, name) {
+    if (!team) throw new Error("先に共有チームへ接続してください");
+    const { error } = await client.rpc("rename_minna_member", { target_team: team.id, target_member: memberId, member_name: name });
+    if (error) throw error;
+    await refresh();
+  }
+
+  async function deleteMember(memberId) {
+    if (!team) throw new Error("先に共有チームへ接続してください");
+    const { error } = await client.rpc("delete_minna_member", { target_team: team.id, target_member: memberId });
+    if (error) throw error;
+    await refresh();
+  }
+
   function inviteLink() {
     return team ? `${location.origin}${location.pathname}?invite=${team.invite_code}` : "";
   }
 
-  return { enabled, init, createTeam, joinTeam, upsertTask, deleteTask, updateNames, inviteLink, isOnline: () => Boolean(team), refresh };
+  return { enabled, init, createTeam, joinTeam, upsertTask, deleteTask, updateNames, addMember, renameMember, deleteMember, inviteLink, isOnline: () => Boolean(team), refresh };
 })();
