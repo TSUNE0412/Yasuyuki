@@ -346,7 +346,7 @@ el("createTeamForm").addEventListener("submit", async (event) => {
 el("joinTeamForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
-    const invite = new URLSearchParams(location.search).get("invite");
+    const invite = TeamSync.joinCode();
     await TeamSync.joinTeam(invite, el("joinNameInput").value.trim());
     updateShareModal({ enabled: true, online: true });
     showToast("チームに参加しました");

@@ -18,8 +18,14 @@ window.TeamSync = (() => {
     if (inviteCode && inviteCode !== localStorage.getItem("minna-invite-code")) return { enabled: true, needsJoin: true, inviteCode };
     if (!savedTeam) return { enabled: true, needsCreate: true };
     team = { id: savedTeam, invite_code: localStorage.getItem("minna-invite-code") };
-    await subscribe();
-    await refresh();
+    try {
+      await subscribe();
+      await refresh();
+    } catch (error) {
+      if (!team.invite_code) throw error;
+      team = null;
+      return { enabled: true, needsJoin: true, inviteCode: localStorage.getItem("minna-invite-code"), reconnect: true };
+    }
     return { enabled: true, online: true, team };
   }
 
@@ -122,5 +128,9 @@ window.TeamSync = (() => {
     return team ? `${location.origin}${location.pathname}?invite=${team.invite_code}` : "";
   }
 
-  return { enabled, init, createTeam, joinTeam, upsertTask, deleteTask, updateNames, addMember, renameMember, deleteMember, inviteLink, isOnline: () => Boolean(team), refresh };
+  function joinCode() {
+    return new URLSearchParams(location.search).get("invite") || localStorage.getItem("minna-invite-code");
+  }
+
+  return { enabled, init, createTeam, joinTeam, upsertTask, deleteTask, updateNames, addMember, renameMember, deleteMember, inviteLink, joinCode, isOnline: () => Boolean(team), refresh };
 })();
