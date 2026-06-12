@@ -301,7 +301,7 @@ function updateShareModal(status) {
   el("createTeamForm").hidden = !status.needsCreate;
   el("joinTeamForm").hidden = !status.needsJoin;
   el("shareOnline").hidden = !status.online;
-  if (status.online) el("inviteLinkInput").value = TeamSync.inviteLink();
+  if (status.online) el("inviteLinkInput").value = TeamSync.inviteLink(el("inviteNameInput").value);
 }
 
 async function initializeSharing() {
@@ -354,8 +354,19 @@ el("joinTeamForm").addEventListener("submit", async (event) => {
   } catch (error) { showToast(`参加できませんでした: ${error.message}`); }
 });
 el("copyInviteButton").addEventListener("click", async () => {
-  await navigator.clipboard.writeText(TeamSync.inviteLink());
+  const name = el("inviteNameInput").value.trim();
+  if (!name) {
+    showToast("先に同僚の名前を入力してください");
+    el("inviteNameInput").focus();
+    return;
+  }
+  const link = TeamSync.inviteLink(name);
+  el("inviteLinkInput").value = link;
+  await navigator.clipboard.writeText(link);
   showToast("招待リンクをコピーしました");
+});
+el("inviteNameInput").addEventListener("input", () => {
+  el("inviteLinkInput").value = TeamSync.inviteLink(el("inviteNameInput").value);
 });
 
 el("todayLabel").textContent = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date());

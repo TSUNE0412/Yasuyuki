@@ -14,7 +14,12 @@ window.TeamSync = (() => {
     if (error) throw error;
     user = data.user;
     const inviteCode = new URLSearchParams(location.search).get("invite");
+    const inviteName = new URLSearchParams(location.search).get("name");
     const savedTeam = localStorage.getItem("minna-team-id");
+    if (inviteCode && inviteName) {
+      await joinTeam(inviteCode, inviteName);
+      return { enabled: true, online: true, team };
+    }
     if (inviteCode && inviteCode !== localStorage.getItem("minna-invite-code")) return { enabled: true, needsJoin: true, inviteCode };
     if (!savedTeam) return { enabled: true, needsCreate: true };
     team = { id: savedTeam, invite_code: localStorage.getItem("minna-invite-code") };
@@ -124,8 +129,11 @@ window.TeamSync = (() => {
     await refresh();
   }
 
-  function inviteLink() {
-    return team ? `${location.origin}${location.pathname}?invite=${team.invite_code}` : "";
+  function inviteLink(name = "") {
+    if (!team) return "";
+    const params = new URLSearchParams({ invite: team.invite_code });
+    if (name.trim()) params.set("name", name.trim());
+    return `${location.origin}${location.pathname}?${params}`;
   }
 
   function joinCode() {
