@@ -299,9 +299,8 @@ document.addEventListener("keydown", (event) => { if (event.key === "Escape") { 
 function updateShareModal(status) {
   el("shareOffline").hidden = status.enabled;
   el("createTeamForm").hidden = !status.needsCreate;
-  el("joinTeamForm").hidden = !status.needsJoin;
   el("shareOnline").hidden = !status.online;
-  if (status.online) el("inviteLinkInput").value = TeamSync.inviteLink(el("inviteNameInput").value);
+  if (status.online) el("inviteLinkInput").value = TeamSync.inviteLink();
 }
 
 async function initializeSharing() {
@@ -315,7 +314,6 @@ async function initializeSharing() {
       render();
     });
     updateShareModal(status);
-    if (status.needsJoin) openShareModal();
   } catch (error) {
     showToast(`共有接続エラー: ${error.message}`);
     updateShareModal({ enabled: false });
@@ -329,7 +327,6 @@ function openShareModal() {
     enabled: TeamSync.enabled,
     online: TeamSync.isOnline(),
     needsCreate: TeamSync.enabled && !TeamSync.isOnline() && !joinCode,
-    needsJoin: TeamSync.enabled && !TeamSync.isOnline() && Boolean(joinCode),
   });
 }
 
@@ -344,29 +341,11 @@ el("createTeamForm").addEventListener("submit", async (event) => {
     showToast("共有チームを作成しました");
   } catch (error) { showToast(`作成できませんでした: ${error.message}`); }
 });
-el("joinTeamForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  try {
-    const invite = TeamSync.joinCode();
-    await TeamSync.joinTeam(invite, el("joinNameInput").value.trim());
-    updateShareModal({ enabled: true, online: true });
-    showToast("チームに参加しました");
-  } catch (error) { showToast(`参加できませんでした: ${error.message}`); }
-});
 el("copyInviteButton").addEventListener("click", async () => {
-  const name = el("inviteNameInput").value.trim();
-  if (!name) {
-    showToast("先に同僚の名前を入力してください");
-    el("inviteNameInput").focus();
-    return;
-  }
-  const link = TeamSync.inviteLink(name);
+  const link = TeamSync.inviteLink();
   el("inviteLinkInput").value = link;
   await navigator.clipboard.writeText(link);
-  showToast("招待リンクをコピーしました");
-});
-el("inviteNameInput").addEventListener("input", () => {
-  el("inviteLinkInput").value = TeamSync.inviteLink(el("inviteNameInput").value);
+  showToast("共有URLをコピーしました");
 });
 
 el("todayLabel").textContent = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date());

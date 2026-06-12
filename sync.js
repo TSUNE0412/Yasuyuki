@@ -14,13 +14,11 @@ window.TeamSync = (() => {
     if (error) throw error;
     user = data.user;
     const inviteCode = new URLSearchParams(location.search).get("invite");
-    const inviteName = new URLSearchParams(location.search).get("name");
     const savedTeam = localStorage.getItem("minna-team-id");
-    if (inviteCode && inviteName) {
-      await joinTeam(inviteCode, inviteName);
+    if (inviteCode) {
+      await joinTeam(inviteCode);
       return { enabled: true, online: true, team };
     }
-    if (inviteCode && inviteCode !== localStorage.getItem("minna-invite-code")) return { enabled: true, needsJoin: true, inviteCode };
     if (!savedTeam) return { enabled: true, needsCreate: true };
     team = { id: savedTeam, invite_code: localStorage.getItem("minna-invite-code") };
     try {
@@ -28,8 +26,10 @@ window.TeamSync = (() => {
       await refresh();
     } catch (error) {
       if (!team.invite_code) throw error;
+      const savedInvite = team.invite_code;
       team = null;
-      return { enabled: true, needsJoin: true, inviteCode: localStorage.getItem("minna-invite-code"), reconnect: true };
+      await joinTeam(savedInvite);
+      return { enabled: true, online: true, team };
     }
     return { enabled: true, online: true, team };
   }
@@ -49,8 +49,8 @@ window.TeamSync = (() => {
     return team;
   }
 
-  async function joinTeam(inviteCode, name) {
-    const { data, error } = await client.rpc("join_minna_team", { invite: inviteCode, member_name: name });
+  async function joinTeam(inviteCode) {
+    const { data, error } = await client.rpc("access_minna_team", { invite: inviteCode });
     if (error) throw error;
     rememberTeam(data);
     history.replaceState({}, "", location.pathname);
@@ -129,11 +129,9 @@ window.TeamSync = (() => {
     await refresh();
   }
 
-  function inviteLink(name = "") {
+  function inviteLink() {
     if (!team) return "";
-    const params = new URLSearchParams({ invite: team.invite_code });
-    if (name.trim()) params.set("name", name.trim());
-    return `${location.origin}${location.pathname}?${params}`;
+    return `${location.origin}${location.pathname}?invite=${team.invite_code}`;
   }
 
   function joinCode() {

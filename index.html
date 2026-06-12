@@ -108,16 +108,10 @@
           <label>あなたの名前<input id="ownerNameInput" required maxlength="30" placeholder="例：田中 太郎" /></label>
           <button class="primary-button submit-button" type="submit">共有チームを作成する</button>
         </form>
-        <form id="joinTeamForm" hidden>
-          <p>招待されたチームへ参加します。</p>
-          <label>あなたの名前<input id="joinNameInput" required maxlength="30" placeholder="例：佐藤 花子" /></label>
-          <button class="primary-button submit-button" type="submit">チームに参加する</button>
-        </form>
         <div id="shareOnline" hidden>
           <div class="share-status online">● リアルタイム同期中</div>
-          <label>同僚の名前<input id="inviteNameInput" maxlength="30" placeholder="例：佐藤 花子" /></label>
-          <label>名前入り招待リンク<div class="copy-row"><input id="inviteLinkInput" readonly /><button class="primary-button" id="copyInviteButton" type="button">コピー</button></div></label>
-          <p class="share-help">名前を入力してからコピーしてください。このリンクを開いた同僚は、登録操作なしで同じチームに参加できます。</p>
+          <label>共有URL<div class="copy-row"><input id="inviteLinkInput" readonly /><button class="primary-button" id="copyInviteButton" type="button">コピー</button></div></label>
+          <p class="share-help">このURLを知っている人は、登録操作なしで同じToDoを閲覧・編集できます。</p>
         </div>
       </section>
     </div>
