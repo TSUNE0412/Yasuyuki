@@ -44,7 +44,7 @@ function loadTasks() {
   const tasks = stored?.tasks || defaultTasks;
   const currentSaturday = getSaturdayKey();
   if (stored?.routineResetKey !== currentSaturday) {
-    tasks.forEach((task) => { if (task.type === "routine") task.done = false; });
+    tasks.forEach((task) => { if (task.type === "routine") { task.done = false; task.completedBy = []; } });
   }
   localStorage.setItem("minna-tasks", JSON.stringify({ tasks, routineResetKey: currentSaturday }));
   return tasks;
@@ -52,6 +52,12 @@ function loadTasks() {
 
 function saveTasks() {
   localStorage.setItem("minna-tasks", JSON.stringify({ tasks: state.tasks, routineResetKey: getSaturdayKey() }));
+}
+
+function normalizeTask(task, index = 0) {
+  const assignees = task.assignees || (task.assignee && task.assignee !== "everyone" ? [task.assignee] : []);
+  const completedBy = task.completedBy || (task.done && assignees.length ? [...assignees] : []);
+  return { ...task, assignees, completedBy, order: task.order ?? index };
 }
 
 function syncTask(task) {
@@ -87,22 +93,34 @@ function formatDue(due) {
 
 function todoVisible(task) {
   if (task.type !== "todo") return false;
-  if (state.todoFilter === "done") return task.done;
-  if (state.todoFilter === "open") return !task.done;
-  return !task.done || !isPastDue(task);
+  const done = taskDone(task);
+  if (state.todoFilter === "done") return done;
+  if (state.todoFilter === "open") return !done;
+  return !done || !isPastDue(task);
+}
+
+function taskDone(task) {
+  return task.assignees.length ? task.assignees.every((id) => task.completedBy.includes(id)) : task.done;
 }
 
 function taskRow(task) {
-  const member = members.find((item) => item.id === task.assignee) || members[0];
+  const assignedMembers = task.assignees.map((id) => members.find((item) => item.id === id)).filter(Boolean);
   const soon = task.due && task.due <= dateOffset(1);
   const routine = task.type === "routine";
-  return `<div class="task-row ${routine ? "routine-row" : "todo-row"} ${task.done ? "done" : ""}">
+  const done = taskDone(task);
+  const completion = assignedMembers.length ? assignedMembers.map((member) => `<label class="completion-item">
+    <input class="task-checkbox" type="checkbox" data-action="toggle-member" data-member-id="${member.id}" data-id="${task.id}" ${task.completedBy.includes(member.id) ? "checked" : ""}>
+    ${escapeHtml(member.name)}
+  </label>`).join("") : `<label class="completion-item"><input class="task-checkbox" type="checkbox" data-action="toggle" data-id="${task.id}" ${task.done ? "checked" : ""}>全員</label>`;
+  const avatars = assignedMembers.length ? assignedMembers.map(avatar).join("") : avatar(members[0]);
+  return `<div class="task-row ${routine ? "routine-row" : "todo-row"} ${done ? "done" : ""}">
     <div class="task-main">
-      <input class="task-checkbox" type="checkbox" data-action="toggle" data-id="${task.id}" ${task.done ? "checked" : ""} aria-label="${escapeHtml(task.name)}を完了にする">
-      <span class="task-name">${escapeHtml(task.name)}</span>
+      <div class="task-title-line"><span class="task-name">${escapeHtml(task.name)}</span></div>
+      <div class="completion-list">${completion}</div>
     </div>
-    <div class="assignee task-assignee" title="${member.name}" aria-label="担当者: ${member.name}">${avatar(member)}</div>
-    ${routine ? "" : `<div class="due ${soon && !task.done ? "soon" : ""}">${formatDue(task.due)}</div>`}
+    <div class="assignee task-assignee" aria-label="担当者">${avatars}</div>
+    ${routine ? "" : `<div class="due ${soon && !done ? "soon" : ""}">${formatDue(task.due)}</div>`}
+    <div class="order-buttons"><button class="order-button" data-action="up" data-id="${task.id}" title="上へ">↑</button><button class="order-button" data-action="down" data-id="${task.id}" title="下へ">↓</button></div>
     <button class="delete-button" data-action="delete" data-id="${task.id}" aria-label="${escapeHtml(task.name)}を削除" title="削除">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg>
     </button>
@@ -110,8 +128,9 @@ function taskRow(task) {
 }
 
 function render() {
-  const todos = state.tasks.filter(todoVisible);
-  const routines = state.tasks.filter((task) => task.type === "routine");
+  state.tasks = state.tasks.map(normalizeTask);
+  const todos = state.tasks.filter(todoVisible).sort((a, b) => a.order - b.order);
+  const routines = state.tasks.filter((task) => task.type === "routine").sort((a, b) => a.order - b.order);
   el("todoList").innerHTML = todos.map(taskRow).join("");
   el("routineList").innerHTML = routines.map(taskRow).join("");
   el("todoEmpty").hidden = todos.length > 0;
@@ -119,14 +138,12 @@ function render() {
   el("brandMark").textContent = state.names.mark;
   el("appName").textContent = state.names.app;
   el("teamName").textContent = state.names.team;
-  const selectedAssignee = el("taskAssignee").value || "everyone";
-  el("taskAssignee").innerHTML = members.map((member) => `<option value="${member.id}">${member.name}</option>`).join("");
-  if (members.some((member) => member.id === selectedAssignee)) el("taskAssignee").value = selectedAssignee;
+  el("taskAssignees").innerHTML = members.map((member) => `<label class="assignee-choice"><input type="checkbox" value="${member.id}" ${member.id === "everyone" ? "checked" : ""}>${escapeHtml(member.name)}</label>`).join("");
   renderProgress();
 }
 
 function progressFor(tasks) {
-  const done = tasks.filter((task) => task.done).length;
+  const done = tasks.filter(taskDone).length;
   return { done, total: tasks.length, percent: tasks.length ? Math.round(done / tasks.length * 100) : 0 };
 }
 
@@ -138,7 +155,7 @@ function renderProgress() {
   el("overallOpen").textContent = `${overall.total - overall.done}件 未完了`;
   el("overallRing").style.background = ringBackground(overall.percent);
   el("memberList").innerHTML = members.filter((member) => member.id !== "everyone").map((member) => {
-    const progress = progressFor(state.tasks.filter((task) => task.assignee === member.id));
+    const progress = progressFor(state.tasks.filter((task) => task.assignees.includes(member.id)));
     return `<div class="member-row">${avatar(member)}<span class="member-name">${member.name}<small>${progress.done}/${progress.total} 完了</small></span><div class="sidebar-ring small" style="background:${ringBackground(progress.percent)}"><span>${progress.percent}%</span></div></div>`;
   }).join("");
 }
@@ -164,6 +181,7 @@ function openModal(type = "todo") {
   el("taskType").value = type;
   el("taskName").value = "";
   el("taskDue").value = type === "todo" ? getNextWeekFriday() : "";
+  el("taskAssignees").querySelectorAll("input").forEach((input) => { input.checked = input.value === "everyone"; });
   updateDueField();
   el("modalBackdrop").hidden = false;
   setTimeout(() => el("taskName").focus(), 10);
@@ -223,8 +241,22 @@ document.querySelectorAll(".task-list").forEach((list) => list.addEventListener(
   if (!task) return;
   if (target.dataset.action === "toggle") {
     task.done = target.checked;
+    task.completedBy = [];
     showToast(task.done ? "タスクを完了にしました" : "タスクを未完了に戻しました");
     syncTask(task);
+  } else if (target.dataset.action === "toggle-member") {
+    task.completedBy = target.checked ? [...new Set([...task.completedBy, target.dataset.memberId])] : task.completedBy.filter((id) => id !== target.dataset.memberId);
+    task.done = taskDone(task);
+    syncTask(task);
+  } else if (target.dataset.action === "up" || target.dataset.action === "down") {
+    const sameType = state.tasks.filter((item) => item.type === task.type).sort((a, b) => a.order - b.order);
+    const index = sameType.findIndex((item) => item.id === task.id);
+    const swapIndex = target.dataset.action === "up" ? index - 1 : index + 1;
+    if (swapIndex >= 0 && swapIndex < sameType.length) {
+      const other = sameType[swapIndex];
+      [task.order, other.order] = [other.order, task.order];
+      syncTask(task); syncTask(other);
+    }
   } else {
     state.tasks = state.tasks.filter((item) => item.id !== task.id);
     showToast("タスクを削除しました");
@@ -237,7 +269,10 @@ document.querySelectorAll(".task-list").forEach((list) => list.addEventListener(
 el("taskForm").addEventListener("submit", (event) => {
   event.preventDefault();
   const type = el("taskType").value;
-  const task = { id: Date.now(), name: el("taskName").value.trim(), assignee: el("taskAssignee").value, due: type === "routine" ? "" : el("taskDue").value, type, done: false };
+  const selected = [...el("taskAssignees").querySelectorAll("input:checked")].map((input) => input.value);
+  const assignees = selected.includes("everyone") ? [] : selected;
+  const maxOrder = Math.max(-1, ...state.tasks.filter((item) => item.type === type).map((item) => item.order ?? 0));
+  const task = { id: Date.now(), name: el("taskName").value.trim(), assignees, completedBy: [], order: maxOrder + 1, due: type === "routine" ? "" : el("taskDue").value, type, done: false };
   state.tasks.unshift(task);
   syncTask(task);
   saveTasks();
@@ -245,6 +280,13 @@ el("taskForm").addEventListener("submit", (event) => {
   render();
   showToast("新しいタスクを追加しました");
   document.getElementById(`${type}Section`).scrollIntoView({ behavior: "smooth" });
+});
+
+el("taskAssignees").addEventListener("change", (event) => {
+  const inputs = [...el("taskAssignees").querySelectorAll("input")];
+  if (event.target.value === "everyone" && event.target.checked) inputs.forEach((input) => { if (input.value !== "everyone") input.checked = false; });
+  if (event.target.value !== "everyone" && event.target.checked) inputs.find((input) => input.value === "everyone").checked = false;
+  if (!inputs.some((input) => input.checked)) inputs.find((input) => input.value === "everyone").checked = true;
 });
 
 el("nameForm").addEventListener("submit", (event) => {

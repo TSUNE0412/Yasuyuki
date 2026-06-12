@@ -74,7 +74,11 @@ window.TeamSync = (() => {
     ]);
     if (taskError || memberError || teamError) throw taskError || memberError || teamError;
     onChange?.({
-      tasks: taskRows.map((row) => ({ id: row.id, name: row.name, assignee: row.assigned_to || "everyone", due: row.due_date || "", type: row.task_type, done: row.done })),
+      tasks: taskRows.map((row) => ({
+        id: row.id, name: row.name, assignees: row.assignee_ids || (row.assigned_to ? [row.assigned_to] : []),
+        completedBy: row.completed_by || [], order: row.sort_order || 0,
+        due: row.due_date || "", type: row.task_type, done: row.done,
+      })),
       members: memberRows.map((row, index) => ({ id: row.member_id || row.user_id, name: row.display_name, initial: row.display_name.slice(0, 1), color: ["blue", "pink", "yellow", "purple"][index % 4] })),
       names: { mark: teamRow.app_mark, app: teamRow.app_name, team: teamRow.name },
     });
@@ -91,7 +95,11 @@ window.TeamSync = (() => {
 
   async function upsertTask(task) {
     if (!team) return;
-    const row = { id: Number(task.id), team_id: team.id, name: task.name, assigned_to: task.assignee === "everyone" ? null : task.assignee, due_date: task.due || null, task_type: task.type, done: task.done };
+    const row = {
+      id: Number(task.id), team_id: team.id, name: task.name, assigned_to: task.assignees?.length === 1 ? task.assignees[0] : null,
+      assignee_ids: task.assignees || [], completed_by: task.completedBy || [], sort_order: task.order || 0,
+      due_date: task.due || null, task_type: task.type, done: task.done,
+    };
     const { error } = await client.from("minna_tasks").upsert(row);
     if (error) throw error;
   }

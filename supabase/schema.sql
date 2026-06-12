@@ -25,6 +25,9 @@ create table if not exists public.minna_tasks (
   team_id uuid not null references public.minna_teams(id) on delete cascade,
   name text not null,
   assigned_to uuid,
+  assignee_ids uuid[] not null default '{}',
+  completed_by uuid[] not null default '{}',
+  sort_order bigint not null default 0,
   due_date date,
   task_type text not null check (task_type in ('todo', 'routine')),
   done boolean not null default false,
@@ -152,7 +155,11 @@ returns void language plpgsql security definer set search_path = public
 as $$
 begin
   if not public.is_minna_member(target_team) then raise exception 'このチームを編集できません'; end if;
-  update public.minna_tasks set assigned_to = null where team_id = target_team and assigned_to = target_member;
+  update public.minna_tasks
+  set assigned_to = null,
+      assignee_ids = array_remove(assignee_ids, target_member),
+      completed_by = array_remove(completed_by, target_member)
+  where team_id = target_team and (assigned_to = target_member or target_member = any(assignee_ids));
   delete from public.minna_members where team_id = target_team and member_id = target_member;
 end $$;
 

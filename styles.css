@@ -82,13 +82,18 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
 .filter-button { border: 0; border-radius: 6px; padding: 7px 11px; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; }
 .filter-button.active { background: #fff; color: var(--blue); box-shadow: 0 2px 8px rgba(20,48,82,.09); }
 .task-list-header, .task-row { display: grid; align-items: center; column-gap: 8px; }
-.todo-header, .todo-row { grid-template-columns: minmax(170px,1fr) 42px 78px 30px; }
-.routine-header, .routine-row { grid-template-columns: minmax(170px,1fr) 42px 30px; }
+.todo-header, .todo-row { grid-template-columns: minmax(190px,1fr) 74px 72px 54px 30px; }
+.routine-header, .routine-row { grid-template-columns: minmax(190px,1fr) 74px 54px 30px; }
 .task-list-header { padding: 10px 20px 10px 52px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #f9fafc; color: var(--muted); font-size: 10px; font-weight: 800; }
 .task-row { min-height: 66px; padding: 9px 18px; border-bottom: 1px solid var(--line); transition: background .18s ease; }
 .task-row:last-child { border-bottom: 0; }
 .task-row:hover { background: #fafcff; }
-.task-main { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.task-main { display: grid; gap: 7px; min-width: 0; }
+.task-title-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.completion-list { display: flex; flex-wrap: wrap; gap: 5px; margin-left: 29px; }
+.completion-item { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 12px; background: var(--page); color: var(--muted); font-size: 9px; font-weight: 700; }
+.completion-item .task-checkbox { width: 14px; height: 14px; border-radius: 4px; }
+.completion-item .task-checkbox:checked::after { font-size: 10px; }
 .task-checkbox { appearance: none; width: 19px; height: 19px; flex: 0 0 auto; border: 1.5px solid #b8c4d2; border-radius: 5px; background: #fff; }
 .task-checkbox:checked { border-color: var(--green); background: var(--green); position: relative; }
 .task-checkbox:checked::after { content: "✓"; position: absolute; inset: -2px 0 0; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 900; }
@@ -103,6 +108,9 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
 .delete-button { width: 30px; height: 30px; border: 0; border-radius: 7px; background: transparent; color: #91a0b0; font-size: 17px; }
 .delete-button svg { display: block; width: 16px; height: 16px; margin: auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .delete-button:hover { background: #fff0ef; color: var(--coral); }
+.order-buttons { display: flex; gap: 3px; justify-content: center; }
+.order-button { width: 24px; height: 27px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); font-weight: 900; }
+.order-button:hover { background: var(--blue-soft); color: var(--blue); }
 .empty-state { padding: 75px 20px; text-align: center; }
 .empty-check { width: 48px; height: 48px; display: grid; place-items: center; margin: 0 auto 14px; border-radius: 50%; background: var(--green-soft); color: var(--green); font-size: 23px; font-weight: 900; }
 .empty-state h3 { margin-bottom: 7px; font-size: 15px; }.empty-state p { margin: 0; color: var(--muted); font-size: 12px; }
@@ -165,6 +173,9 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
 .modal form, .modal label { display: grid; gap: 8px; }.modal form { gap: 17px; }.modal label { color: var(--ink); font-size: 11px; font-weight: 800; }
 .modal input, .modal select { width: 100%; border: 1px solid #d7dfe8; border-radius: 8px; padding: 11px; background: #fff; color: var(--ink); font-size: 12px; outline: none; }
 .modal input:focus, .modal select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.assignee-picker { display: flex; flex-wrap: wrap; gap: 7px; padding: 9px; border: 1px solid #d7dfe8; border-radius: 8px; }
+.assignee-choice { display: inline-flex !important; grid-template-columns: none !important; align-items: center; gap: 5px !important; padding: 5px 8px; border-radius: 14px; background: var(--page); color: var(--ink) !important; font-size: 10px !important; }
+.assignee-choice input { width: 14px !important; margin: 0; padding: 0; }
 .name-modal { width: min(390px, 100%); }
 .share-modal { width: min(480px, 100%); }
 .share-modal form { margin-top: 18px; }
@@ -197,6 +208,6 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
   .app-shell { display: block; }.sidebar { display: none; }.main { padding: 23px 14px 35px; }.topbar { margin-bottom: 17px; }.topbar .primary-button { padding: 10px 13px; font-size: 12px; }
   .mobile-tabs { display: flex; gap: 5px; margin-bottom: 14px; padding: 4px; border-radius: 9px; background: #e9edf2; }.mobile-tab { flex: 1; padding: 9px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 800; }.mobile-tab.active { background: #fff; color: var(--blue); }
   .section-intro { align-items: flex-start; flex-direction: column; padding: 18px; }.filter-group { width: 100%; }.filter-button { flex: 1; }
-  .task-list-header { display: none; }.task-row, .todo-row, .routine-row { grid-template-columns: 1fr 36px 30px; row-gap: 8px; min-height: 70px; padding: 14px; }.delete-button { grid-column: 3; grid-row: 1; }.task-main { grid-column: 1; grid-row: 1; }.task-assignee { grid-column: 2; grid-row: 1; margin-left: 0; }.due { grid-column: 1; grid-row: 2; margin-left: 32px; }
+  .task-list-header { display: none; }.task-row, .todo-row, .routine-row { grid-template-columns: 1fr 54px 30px; row-gap: 8px; min-height: 70px; padding: 14px; }.delete-button { grid-column: 3; grid-row: 1; }.task-main { grid-column: 1; grid-row: 1; }.task-assignee { display: none; }.order-buttons { grid-column: 2; grid-row: 1; }.due { grid-column: 1; grid-row: 2; margin-left: 29px; }
   .summary-panel { display: block; }.summary-panel > * + * { margin-top: 20px; }.form-row { grid-template-columns: 1fr; }
 }

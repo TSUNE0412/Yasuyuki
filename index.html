@@ -52,7 +52,7 @@
                 <button class="filter-button" data-todo-filter="done">完了</button>
               </div>
             </div>
-            <div class="task-list-header todo-header"><span>タスク</span><span>担当</span><span>期限</span><span></span></div>
+            <div class="task-list-header todo-header"><span>タスク・完了</span><span>担当</span><span>期限</span><span>順番</span><span></span></div>
             <div id="todoList" class="task-list"></div>
             <div id="todoEmpty" class="empty-state" hidden><div class="empty-check">✓</div><h3>表示するToDoはありません</h3><p>新しい仕事を追加すると、ここに表示されます。</p></div>
           </section>
@@ -62,7 +62,7 @@
               <div><h2>ルーティン</h2><p>土曜日にリセットし、次の金曜日まで取り組みます。</p></div>
               <div class="reset-inline"><span>↻</span> 土曜リセット</div>
             </div>
-            <div class="task-list-header routine-header"><span>タスク</span><span>担当</span><span></span></div>
+            <div class="task-list-header routine-header"><span>タスク・完了</span><span>担当</span><span>順番</span><span></span></div>
             <div id="routineList" class="task-list"></div>
             <div id="routineEmpty" class="empty-state" hidden><div class="empty-check">↻</div><h3>ルーティンはありません</h3><p>繰り返す仕事を追加すると、ここに表示されます。</p></div>
           </div>
@@ -77,7 +77,7 @@
         <form id="taskForm">
           <label>タスク名<input id="taskName" required maxlength="70" placeholder="例：週次レポートを共有する" /></label>
           <div class="form-row">
-            <label>担当者<select id="taskAssignee"></select></label>
+            <label>担当者<div id="taskAssignees" class="assignee-picker"></div></label>
             <label id="dueLabel">期限<input id="taskDue" type="date" /></label>
           </div>
           <label>種別<select id="taskType"><option value="todo">ToDo（一回きり）</option><option value="routine">ルーティン（毎週土曜にリセット）</option></select></label>
