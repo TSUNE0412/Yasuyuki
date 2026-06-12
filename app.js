@@ -324,11 +324,12 @@ async function initializeSharing() {
 
 function openShareModal() {
   el("shareModalBackdrop").hidden = false;
+  const joinCode = TeamSync.joinCode();
   updateShareModal({
     enabled: TeamSync.enabled,
     online: TeamSync.isOnline(),
-    needsCreate: TeamSync.enabled && !TeamSync.isOnline() && !new URLSearchParams(location.search).get("invite"),
-    needsJoin: TeamSync.enabled && !TeamSync.isOnline() && Boolean(new URLSearchParams(location.search).get("invite")),
+    needsCreate: TeamSync.enabled && !TeamSync.isOnline() && !joinCode,
+    needsJoin: TeamSync.enabled && !TeamSync.isOnline() && Boolean(joinCode),
   });
 }
 

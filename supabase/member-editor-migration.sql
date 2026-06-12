@@ -1,8 +1,8 @@
 alter table public.minna_members add column if not exists member_id uuid default gen_random_uuid();
 update public.minna_members set member_id = user_id where member_id is null;
 alter table public.minna_members alter column member_id set not null;
-alter table public.minna_members alter column user_id drop not null;
 alter table public.minna_members drop constraint if exists minna_members_pkey;
+alter table public.minna_members alter column user_id drop not null;
 alter table public.minna_members add primary key (team_id, member_id);
 alter table public.minna_members drop constraint if exists minna_members_team_id_user_id_key;
 alter table public.minna_members add unique (team_id, user_id);
