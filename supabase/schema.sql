@@ -1,0 +1,94 @@
+create extension if not exists pgcrypto;
+
+create table if not exists public.minna_teams (
+  id uuid primary key default gen_random_uuid(),
+  invite_code text unique not null default encode(gen_random_bytes(8), 'hex'),
+  name text not null,
+  app_name text not null default 'みんなの仕事',
+  app_mark text not null default 'M',
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.minna_members (
+  team_id uuid not null references public.minna_teams(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  display_name text not null,
+  joined_at timestamptz not null default now(),
+  primary key (team_id, user_id)
+);
+
+create table if not exists public.minna_tasks (
+  id bigint not null,
+  team_id uuid not null references public.minna_teams(id) on delete cascade,
+  name text not null,
+  assigned_to uuid references auth.users(id) on delete set null,
+  due_date date,
+  task_type text not null check (task_type in ('todo', 'routine')),
+  done boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (team_id, id)
+);
+
+create index if not exists minna_tasks_team_id_idx on public.minna_tasks(team_id);
+create index if not exists minna_members_user_id_idx on public.minna_members(user_id);
+
+alter table public.minna_teams enable row level security;
+alter table public.minna_members enable row level security;
+alter table public.minna_tasks enable row level security;
+
+revoke all on public.minna_teams from anon, authenticated;
+revoke all on public.minna_members from anon, authenticated;
+revoke all on public.minna_tasks from anon, authenticated;
+grant select on public.minna_teams to authenticated;
+grant update(name, app_name, app_mark) on public.minna_teams to authenticated;
+grant select on public.minna_members to authenticated;
+grant select, insert, update, delete on public.minna_tasks to authenticated;
+
+create or replace function public.is_minna_member(target_team uuid)
+returns boolean language sql stable security definer set search_path = public
+as $$ select exists(select 1 from public.minna_members where team_id = target_team and user_id = auth.uid()) $$;
+
+create policy "members read teams" on public.minna_teams for select using (public.is_minna_member(id));
+create policy "members update teams" on public.minna_teams for update using (public.is_minna_member(id));
+create policy "members read members" on public.minna_members for select using (public.is_minna_member(team_id));
+create policy "members read tasks" on public.minna_tasks for select using (public.is_minna_member(team_id));
+create policy "members add tasks" on public.minna_tasks for insert with check (public.is_minna_member(team_id));
+create policy "members update tasks" on public.minna_tasks for update using (public.is_minna_member(team_id));
+create policy "members delete tasks" on public.minna_tasks for delete using (public.is_minna_member(team_id));
+
+create or replace function public.create_minna_team(team_name text, member_name text, app_name text, app_mark text)
+returns table(id uuid, invite_code text)
+language plpgsql security definer set search_path = public
+as $$
+declare new_team public.minna_teams;
+begin
+  insert into public.minna_teams(name, app_name, app_mark, created_by)
+  values (team_name, app_name, app_mark, auth.uid()) returning * into new_team;
+  insert into public.minna_members(team_id, user_id, display_name) values (new_team.id, auth.uid(), member_name);
+  return query select new_team.id, new_team.invite_code;
+end $$;
+
+create or replace function public.join_minna_team(invite text, member_name text)
+returns table(id uuid, invite_code text)
+language plpgsql security definer set search_path = public
+as $$
+declare found_team public.minna_teams;
+begin
+  select * into found_team from public.minna_teams where minna_teams.invite_code = invite;
+  if found_team.id is null then raise exception '招待リンクが無効です'; end if;
+  if (select count(*) from public.minna_members where team_id = found_team.id) >= 4 then raise exception 'メンバー数は4人までです'; end if;
+  insert into public.minna_members(team_id, user_id, display_name) values (found_team.id, auth.uid(), member_name)
+  on conflict (team_id, user_id) do update set display_name = excluded.display_name;
+  return query select found_team.id, found_team.invite_code;
+end $$;
+
+revoke execute on function public.create_minna_team(text, text, text, text) from public;
+revoke execute on function public.join_minna_team(text, text) from public;
+grant execute on function public.create_minna_team(text, text, text, text) to authenticated;
+grant execute on function public.join_minna_team(text, text) to authenticated;
+
+alter publication supabase_realtime add table public.minna_tasks;
+alter publication supabase_realtime add table public.minna_members;
+alter publication supabase_realtime add table public.minna_teams;

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>みんなの仕事</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" id="brandMark">M</div>
+          <span id="appName">みんなの仕事</span>
+          <button class="edit-name-button" data-edit-name="app" aria-label="アプリ名とアイコンを編集" title="編集">✎</button>
+        </div>
+
+        <div class="overall-progress">
+          <div class="sidebar-heading"><span>全体の進捗</span><strong id="overallFraction"></strong></div>
+          <div class="overall-progress-body">
+            <div class="sidebar-ring large" id="overallRing"><span id="overallPercent">0%</span></div>
+            <div><strong id="overallDone">0件 完了</strong><small id="overallOpen">0件 未完了</small></div>
+          </section>
+        </div>
+
+        <div class="team-block">
+          <div class="team-heading"><span>メンバー</span><button class="small-button" id="inviteButton">＋ 招待</button></div>
+          <div id="memberList" class="member-list"></div>
+        </div>
+
+        <div class="sidebar-footer">
+          <span class="avatar avatar-blue">田</span>
+          <div><strong>田中 太郎</strong><small>管理者</small></div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div><p class="date-label" id="todayLabel"></p><div class="title-row"><h1 id="teamName">チームの仕事</h1><button class="edit-name-button light" data-edit-name="team" aria-label="チーム名を編集" title="編集">✎</button></div></div>
+          <button class="primary-button" id="openAddButton">＋ 新しいタスク</button>
+        </header>
+
+        <div class="board-grid">
+          <section class="task-area" id="todoSection">
+            <div class="section-intro">
+              <div><h2>ToDo</h2><p>完了した仕事は期限日まで表示されます。</p></div>
+              <div class="filter-group" aria-label="ToDoフィルター">
+                <button class="filter-button active" data-todo-filter="all">通常</button>
+                <button class="filter-button" data-todo-filter="open">未完了</button>
+                <button class="filter-button" data-todo-filter="done">完了</button>
+              </div>
+            </div>
+            <div class="task-list-header todo-header"><span>タスク</span><span>担当</span><span>期限</span><span></span></div>
+            <div id="todoList" class="task-list"></div>
+            <div id="todoEmpty" class="empty-state" hidden><div class="empty-check">✓</div><h3>表示するToDoはありません</h3><p>新しい仕事を追加すると、ここに表示されます。</p></div>
+          </section>
+
+          <section class="task-area routine-area" id="routineSection">
+            <div class="section-intro">
+              <div><h2>ルーティン</h2><p>土曜日にリセットし、次の金曜日まで取り組みます。</p></div>
+              <div class="reset-inline"><span>↻</span> 土曜リセット</div>
+            </div>
+            <div class="task-list-header routine-header"><span>タスク</span><span>担当</span><span></span></div>
+            <div id="routineList" class="task-list"></div>
+            <div id="routineEmpty" class="empty-state" hidden><div class="empty-check">↻</div><h3>ルーティンはありません</h3><p>繰り返す仕事を追加すると、ここに表示されます。</p></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <button class="modal-close" id="closeModalButton" aria-label="閉じる">×</button>
+        <h2 id="modalTitle">新しいタスク</h2><p>チームで共有する仕事を登録します。</p>
+        <form id="taskForm">
+          <label>タスク名<input id="taskName" required maxlength="70" placeholder="例：週次レポートを共有する" /></label>
+          <div class="form-row">
+            <label>担当者<select id="taskAssignee"></select></label>
+            <label id="dueLabel">期限<input id="taskDue" type="date" /></label>
+          </div>
+          <label>種別<select id="taskType"><option value="todo">ToDo（一回きり）</option><option value="routine">ルーティン（毎週土曜にリセット）</option></select></label>
+          <button class="primary-button submit-button" type="submit">追加する</button>
+        </form>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="nameModalBackdrop" hidden>
+      <section class="modal name-modal" role="dialog" aria-modal="true" aria-labelledby="nameModalTitle">
+        <button class="modal-close" id="closeNameModalButton" aria-label="閉じる">×</button>
+        <h2 id="nameModalTitle">名前を編集</h2>
+        <form id="nameForm">
+          <label id="markField">アイコン文字<input id="brandMarkInput" maxlength="2" /></label>
+          <label>表示名<input id="displayNameInput" required maxlength="30" /></label>
+          <button class="primary-button submit-button" type="submit">保存する</button>
+        </form>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="shareModalBackdrop" hidden>
+      <section class="modal share-modal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+        <button class="modal-close" id="closeShareModalButton" aria-label="閉じる">×</button>
+        <h2 id="shareModalTitle">チームで共有</h2>
+        <div id="shareOffline">
+          <p>現在はこの端末だけに保存されています。Supabaseの接続設定を追加すると、同僚とリアルタイム共有できます。</p>
+          <div class="share-status offline">● オフライン保存</div>
+        </div>
+        <form id="createTeamForm" hidden>
+          <label>あなたの名前<input id="ownerNameInput" required maxlength="30" placeholder="例：田中 太郎" /></label>
+          <button class="primary-button submit-button" type="submit">共有チームを作成する</button>
+        </form>
+        <form id="joinTeamForm" hidden>
+          <p>招待されたチームへ参加します。</p>
+          <label>あなたの名前<input id="joinNameInput" required maxlength="30" placeholder="例：佐藤 花子" /></label>
+          <button class="primary-button submit-button" type="submit">チームに参加する</button>
+        </form>
+        <div id="shareOnline" hidden>
+          <div class="share-status online">● リアルタイム同期中</div>
+          <label>同僚への招待リンク<div class="copy-row"><input id="inviteLinkInput" readonly /><button class="primary-button" id="copyInviteButton" type="button">コピー</button></div></label>
+          <p class="share-help">このリンクを開いた同僚は、名前を登録して同じチームへ参加できます。</p>
+        </div>
+      </section>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="sync.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
