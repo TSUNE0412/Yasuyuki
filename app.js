@@ -111,7 +111,8 @@ function shortMemberName(name) {
 
 function taskRow(task) {
   const assignedMembers = task.assignees.map((id) => members.find((item) => item.id === id)).filter(Boolean);
-  const soon = task.due && task.due <= dateOffset(1);
+  const dueDiff = task.due ? Math.round((new Date(`${task.due}T00:00:00`) - new Date(`${localDateKey(new Date())}T00:00:00`)) / 86400000) : null;
+  const urgentDue = dueDiff === 0 ? "due-today" : dueDiff === 1 ? "due-tomorrow" : "";
   const routine = task.type === "routine";
   const done = taskDone(task);
   const completion = assignedMembers.length ? assignedMembers.map((member) => `<label class="completion-item">
@@ -120,13 +121,13 @@ function taskRow(task) {
   </label>`).join("") : `<label class="completion-item"><input class="task-checkbox" type="checkbox" data-action="toggle" data-id="${task.id}" ${task.done ? "checked" : ""}><span class="completion-name avatar-everyone">全員</span></label>`;
   return `<div class="task-row ${routine ? "routine-row" : "todo-row"} ${done ? "done" : ""}">
     <div class="task-main">
-      <div class="task-meta"><div class="completion-list">${completion}</div>${routine ? "" : `<div class="due ${soon && !done ? "soon" : ""}">${formatDue(task.due)}</div>`}</div>
+      <div class="completion-list">${completion}</div>
       <span class="task-name">${escapeHtml(task.name)}</span>
     </div>
-    <div class="order-buttons"><button class="order-button" data-action="up" data-id="${task.id}" title="上へ" aria-label="上へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button class="order-button" data-action="down" data-id="${task.id}" title="下へ" aria-label="下へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
-    <button class="delete-button" data-action="delete" data-id="${task.id}" aria-label="${escapeHtml(task.name)}を削除" title="削除">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg>
-    </button>
+    ${routine ? "" : `<div class="due ${urgentDue}">${formatDue(task.due)}</div>`}
+    <div class="task-actions"><div class="order-buttons"><button class="order-button" data-action="up" data-id="${task.id}" title="上へ" aria-label="上へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button><button class="order-button" data-action="down" data-id="${task.id}" title="下へ" aria-label="下へ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+      <button class="delete-button" data-action="delete" data-id="${task.id}" aria-label="${escapeHtml(task.name)}を削除" title="削除"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg></button>
+    </div>
   </div>`;
 }
 
