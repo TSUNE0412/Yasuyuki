@@ -76,10 +76,8 @@
         <h2 id="modalTitle">新しいタスク</h2><p>チームで共有する仕事を登録します。</p>
         <form id="taskForm">
           <label>タスク名<input id="taskName" required maxlength="70" placeholder="例：週次レポートを共有する" /></label>
-          <div class="form-row">
-            <label>担当者<div id="taskAssignees" class="assignee-picker"></div></label>
-            <label id="dueLabel">期限<input id="taskDue" type="text" readonly /><div id="datePicker" class="date-picker" hidden></div></label>
-          </div>
+          <label>担当者<div id="taskAssignees" class="assignee-picker"></div></label>
+          <label id="dueLabel">期限<input id="taskDue" type="text" readonly /><div id="datePicker" class="date-picker" hidden></div></label>
           <input id="taskType" type="hidden" value="todo" />
           <button class="primary-button submit-button" type="submit">追加する</button>
         </form>

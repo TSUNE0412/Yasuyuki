@@ -186,8 +186,8 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
 .modal form, .modal label { display: grid; gap: 8px; }.modal form { gap: 17px; }.modal label { color: var(--ink); font-size: 11px; font-weight: 800; }
 .modal input, .modal select { width: 100%; border: 1px solid #d7dfe8; border-radius: 8px; padding: 11px; background: #fff; color: var(--ink); font-size: 12px; outline: none; }
 .modal input:focus, .modal select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
-.assignee-picker { display: flex; flex-wrap: wrap; gap: 7px; padding: 9px; border: 1px solid #d7dfe8; border-radius: 8px; }
-.assignee-choice { display: inline-flex !important; grid-template-columns: none !important; align-items: center; gap: 5px !important; padding: 5px 8px; border-radius: 14px; background: var(--page); color: var(--ink) !important; font-size: 10px !important; }
+.assignee-picker { display: flex; flex-wrap: nowrap; align-items: center; gap: 7px; width: 100%; min-height: 45px; padding: 9px; overflow-x: auto; border: 1px solid #d7dfe8; border-radius: 8px; }
+.assignee-choice { display: inline-flex !important; flex: 0 0 auto; grid-template-columns: none !important; align-items: center; gap: 5px !important; padding: 5px 8px; border-radius: 14px; background: var(--page); color: var(--ink) !important; font-size: 10px !important; white-space: nowrap; }
 .assignee-choice input { width: 14px !important; margin: 0; padding: 0; }
 .date-picker { margin-top: 5px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; box-shadow: 0 10px 25px rgba(20,48,82,.12); }
 .date-picker-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 11px; }
