@@ -81,6 +81,7 @@ window.TeamSync = (() => {
       })),
       members: memberRows.map((row, index) => ({ id: row.member_id || row.user_id, name: row.display_name, initial: row.display_name.slice(0, 1), color: ["blue", "pink", "yellow", "purple"][index % 4] })),
       names: { mark: teamRow.app_mark, app: teamRow.app_name, team: teamRow.name },
+      calendarUrl: teamRow.calendar_embed_url || "",
     });
   }
 
@@ -116,6 +117,12 @@ window.TeamSync = (() => {
     if (error) throw error;
   }
 
+  async function updateCalendar(calendarUrl) {
+    if (!team) return;
+    const { error } = await client.from("minna_teams").update({ calendar_embed_url: calendarUrl || null }).eq("id", team.id);
+    if (error) throw error;
+  }
+
   async function addMember(name) {
     if (!team) throw new Error("先に共有チームへ接続してください");
     const { error } = await client.rpc("add_minna_member", { target_team: team.id, member_name: name });
@@ -146,5 +153,5 @@ window.TeamSync = (() => {
     return new URLSearchParams(location.search).get("invite") || localStorage.getItem("minna-invite-code");
   }
 
-  return { enabled, init, createTeam, joinTeam, upsertTask, deleteTask, updateNames, addMember, renameMember, deleteMember, inviteLink, joinCode, isOnline: () => Boolean(team), refresh };
+  return { enabled, init, createTeam, joinTeam, upsertTask, deleteTask, updateNames, updateCalendar, addMember, renameMember, deleteMember, inviteLink, joinCode, isOnline: () => Boolean(team), refresh };
 })();

@@ -6,6 +6,7 @@ create table if not exists public.minna_teams (
   name text not null,
   app_name text not null default 'みんなの仕事',
   app_mark text not null default 'M',
+  calendar_embed_url text,
   created_by uuid not null references auth.users(id),
   created_at timestamptz not null default now()
 );
@@ -56,7 +57,7 @@ revoke all on public.minna_members from anon, authenticated;
 revoke all on public.minna_tasks from anon, authenticated;
 revoke all on public.minna_access from anon, authenticated;
 grant select on public.minna_teams to authenticated;
-grant update(name, app_name, app_mark) on public.minna_teams to authenticated;
+grant update(name, app_name, app_mark, calendar_embed_url) on public.minna_teams to authenticated;
 grant select on public.minna_members to authenticated;
 grant select, insert, update, delete on public.minna_tasks to authenticated;
 

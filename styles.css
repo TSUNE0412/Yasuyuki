@@ -50,6 +50,9 @@ button { cursor: pointer; }
 .nav-item.active { background: var(--navy-2); color: #fff; font-weight: 700; }
 .nav-icon { width: 24px; font-size: 20px; text-align: center; }
 .team-block { margin-top: 30px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.16); }
+.calendar-block { min-height: 0; margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.16); }
+.calendar-empty { margin-top: 13px; padding: 14px 8px; border: 1px dashed rgba(255,255,255,.2); border-radius: 8px; color: #9fb3c9; font-size: 9px; line-height: 1.7; text-align: center; }
+.google-calendar-frame { width: 100%; height: 245px; margin-top: 12px; border: 0; border-radius: 8px; background: #fff; }
 .team-heading, .mini-heading { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; }
 .member-heading-actions { display: flex; align-items: center; gap: 6px; }
 .member-heading-actions .edit-name-button { margin-left: 0; }
@@ -77,6 +80,10 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
 .board-grid { max-width: 1380px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(420px, .92fr); gap: 22px; align-items: start; }
 .section-intro { min-height: 102px; padding: 23px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .section-intro h2 { margin-bottom: 6px; font-size: 18px; }
+.section-title-row { display: flex; align-items: center; gap: 9px; }
+.section-title-row h2 { margin-bottom: 0; }
+.section-add-button { width: 29px; height: 29px; border: 0; border-radius: 8px; background: var(--coral); color: #fff; font-size: 21px; font-weight: 500; line-height: 1; box-shadow: 0 4px 10px rgba(255,98,93,.25); }
+.section-add-button:hover { background: var(--coral-dark); }
 .section-intro p { margin-bottom: 0; color: var(--muted); font-size: 12px; }
 .filter-group { display: flex; padding: 3px; border-radius: 8px; background: var(--page); }
 .filter-button { border: 0; border-radius: 6px; padding: 7px 11px; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; }
@@ -153,6 +160,7 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
 .routine-area { scroll-margin-top: 18px; background: var(--navy); border-color: var(--navy); color: #fff; }
 .routine-area .section-intro p { color: #a9bdd2; }
 .routine-area .reset-inline { background: rgba(255,255,255,.1); color: #dceaff; }
+.routine-area .section-add-button { background: var(--coral); color: #fff; }
 .routine-area .task-list-header { border-color: rgba(255,255,255,.13); background: rgba(255,255,255,.06); color: #9fb5cc; }
 .routine-area .task-row { border-color: rgba(255,255,255,.12); }
 .routine-area .task-row:hover { background: rgba(255,255,255,.05); }
@@ -177,6 +185,14 @@ h1 { margin-bottom: 0; font-size: 30px; letter-spacing: -.04em; }
 .assignee-picker { display: flex; flex-wrap: wrap; gap: 7px; padding: 9px; border: 1px solid #d7dfe8; border-radius: 8px; }
 .assignee-choice { display: inline-flex !important; grid-template-columns: none !important; align-items: center; gap: 5px !important; padding: 5px 8px; border-radius: 14px; background: var(--page); color: var(--ink) !important; font-size: 10px !important; }
 .assignee-choice input { width: 14px !important; margin: 0; padding: 0; }
+.date-picker { margin-top: 5px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; box-shadow: 0 10px 25px rgba(20,48,82,.12); }
+.date-picker-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 11px; }
+.date-picker-header button { width: 28px; height: 26px; border: 1px solid var(--line); border-radius: 6px; background: var(--page); color: var(--ink); }
+.date-picker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.date-picker-grid span { padding: 3px 0; color: var(--muted); font-size: 8px; }
+.date-picker-grid button { aspect-ratio: 1; border: 0; border-radius: 5px; background: transparent; color: var(--ink); font-size: 9px; }
+.date-picker-grid button:hover, .date-picker-grid button.selected { background: var(--blue); color: #fff; }
+.date-picker-grid button.outside { color: #b9c2cc; }
 .name-modal { width: min(390px, 100%); }
 .share-modal { width: min(480px, 100%); }
 .share-modal form { margin-top: 18px; }

@@ -34,18 +34,18 @@
           <div id="memberList" class="member-list"></div>
         </div>
 
+        <div class="calendar-block">
+          <div class="team-heading"><span>今週の予定</span><button class="edit-name-button" id="editCalendarButton" aria-label="Googleカレンダーを設定" title="Googleカレンダーを設定">✎</button></div>
+          <div id="calendarEmpty" class="calendar-empty">Googleカレンダーを設定すると<br>1週間の予定を表示できます。</div>
+          <iframe id="googleCalendarFrame" class="google-calendar-frame" title="Googleカレンダーの週予定" hidden></iframe>
+        </div>
       </aside>
 
       <main class="main">
-        <header class="topbar">
-          <div><p class="date-label" id="todayLabel"></p><div class="title-row"><h1 id="teamName">チームの仕事</h1><button class="edit-name-button light" data-edit-name="team" aria-label="チーム名を編集" title="編集">✎</button></div></div>
-          <button class="primary-button" id="openAddButton">＋ 新しいタスク</button>
-        </header>
-
         <div class="board-grid">
           <section class="task-area" id="todoSection">
             <div class="section-intro">
-              <div><h2>ToDo</h2><p>完了した仕事は期限日まで表示されます。</p></div>
+              <div><div class="section-title-row"><h2>ToDo</h2><button class="section-add-button" data-add-type="todo" aria-label="ToDoを追加">＋</button></div><p>完了した仕事は期限日まで表示されます。</p></div>
               <div class="filter-group" aria-label="ToDoフィルター">
                 <button class="filter-button active" data-todo-filter="all">通常</button>
                 <button class="filter-button" data-todo-filter="open">未完了</button>
@@ -59,7 +59,7 @@
 
           <section class="task-area routine-area" id="routineSection">
             <div class="section-intro">
-              <div><h2>ルーティン</h2><p>土曜日にリセットし、次の金曜日まで取り組みます。</p></div>
+              <div><div class="section-title-row"><h2>ルーティン</h2><button class="section-add-button" data-add-type="routine" aria-label="ルーティンを追加">＋</button></div><p>土曜日にリセットし、次の金曜日まで取り組みます。</p></div>
               <div class="reset-inline"><span>↻</span> 土曜リセット</div>
             </div>
             <div class="task-list-header routine-header"><span>担当・完了・タスク</span><span>順番</span><span></span></div>
@@ -78,9 +78,9 @@
           <label>タスク名<input id="taskName" required maxlength="70" placeholder="例：週次レポートを共有する" /></label>
           <div class="form-row">
             <label>担当者<div id="taskAssignees" class="assignee-picker"></div></label>
-            <label id="dueLabel">期限<input id="taskDue" type="date" /></label>
+            <label id="dueLabel">期限<input id="taskDue" type="text" readonly /><div id="datePicker" class="date-picker" hidden></div></label>
           </div>
-          <label>種別<select id="taskType"><option value="todo">ToDo（一回きり）</option><option value="routine">ルーティン（毎週土曜にリセット）</option></select></label>
+          <input id="taskType" type="hidden" value="todo" />
           <button class="primary-button submit-button" type="submit">追加する</button>
         </form>
       </section>
@@ -128,6 +128,17 @@
               <button class="primary-button" type="submit">追加</button>
             </div>
           </label>
+        </form>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="calendarModalBackdrop" hidden>
+      <section class="modal name-modal" role="dialog" aria-modal="true" aria-labelledby="calendarModalTitle">
+        <button class="modal-close" id="closeCalendarModalButton" aria-label="閉じる">×</button>
+        <h2 id="calendarModalTitle">Googleカレンダーを設定</h2>
+        <p>Googleカレンダーの設定画面にある「カレンダーの統合」から、埋め込みコード内のURLを貼り付けてください。</p>
+        <form id="calendarForm">
+          <label>埋め込みURL<input id="calendarUrlInput" type="url" placeholder="https://calendar.google.com/calendar/embed?..." /></label>
+          <button class="primary-button submit-button" type="submit">保存する</button>
         </form>
       </section>
     </div>

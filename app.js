@@ -13,8 +13,9 @@ const defaultTasks = [
   { id: 8, name: "ナレッジベースを更新する", assignee: "yamamoto", due: "", type: "routine", done: true },
 ];
 
-const state = { todoFilter: "all", tasks: loadTasks(), names: loadNames(), editingName: "app" };
+const state = { todoFilter: "all", tasks: loadTasks(), names: loadNames(), calendarUrl: localStorage.getItem("minna-calendar-url") || "", editingName: "app" };
 const el = (id) => document.getElementById(id);
+let calendarMonth = new Date();
 
 function localDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -140,8 +141,8 @@ function render() {
   el("routineEmpty").hidden = routines.length > 0;
   el("brandMark").textContent = state.names.mark;
   el("appName").textContent = state.names.app;
-  el("teamName").textContent = state.names.team;
   el("taskAssignees").innerHTML = members.map((member) => `<label class="assignee-choice"><input type="checkbox" value="${member.id}" ${member.id === "everyone" ? "checked" : ""}>${escapeHtml(member.name)}</label>`).join("");
+  renderCalendarEmbed();
   renderProgress();
 }
 
@@ -185,6 +186,8 @@ function openModal(type = "todo") {
   el("taskName").value = "";
   el("taskDue").value = type === "todo" ? getNextWeekFriday() : "";
   el("taskAssignees").querySelectorAll("input").forEach((input) => { input.checked = input.value === "everyone"; });
+  el("modalTitle").textContent = type === "todo" ? "ToDoを追加" : "ルーティンを追加";
+  el("datePicker").hidden = true;
   updateDueField();
   el("modalBackdrop").hidden = false;
   setTimeout(() => el("taskName").focus(), 10);
@@ -195,6 +198,41 @@ function updateDueField() {
   const todoSelected = el("taskType").value === "todo";
   el("dueLabel").hidden = !todoSelected;
   if (todoSelected && !el("taskDue").value) el("taskDue").value = getNextWeekFriday();
+}
+
+function renderDatePicker() {
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const first = new Date(year, month, 1);
+  const mondayOffset = (first.getDay() + 6) % 7;
+  const start = new Date(year, month, 1 - mondayOffset);
+  const selected = el("taskDue").value;
+  const days = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    const key = localDateKey(date);
+    return `<button type="button" data-date="${key}" class="${date.getMonth() !== month ? "outside" : ""} ${key === selected ? "selected" : ""}">${date.getDate()}</button>`;
+  }).join("");
+  el("datePicker").innerHTML = `<div class="date-picker-header"><button type="button" data-calendar-move="-1">‹</button><strong>${year}年${month + 1}月</strong><button type="button" data-calendar-move="1">›</button></div><div class="date-picker-grid">${["月","火","水","木","金","土","日"].map((day) => `<span>${day}</span>`).join("")}${days}</div>`;
+}
+
+function renderCalendarEmbed() {
+  const hasUrl = Boolean(state.calendarUrl);
+  el("calendarEmpty").hidden = hasUrl;
+  el("googleCalendarFrame").hidden = !hasUrl;
+  if (hasUrl) {
+    const url = new URL(state.calendarUrl);
+    url.searchParams.set("mode", "WEEK");
+    url.searchParams.set("showTitle", "0");
+    url.searchParams.set("showCalendars", "0");
+    url.searchParams.set("wkst", "2");
+    if (el("googleCalendarFrame").src !== url.toString()) el("googleCalendarFrame").src = url.toString();
+  }
+}
+
+function sortTodosByDue() {
+  const todos = state.tasks.filter((task) => task.type === "todo").sort((a, b) => (a.due || "9999-12-31").localeCompare(b.due || "9999-12-31"));
+  todos.forEach((task, index) => { task.order = index; syncTask(task); });
 }
 
 function openNameModal(type) {
@@ -277,6 +315,7 @@ el("taskForm").addEventListener("submit", (event) => {
   const maxOrder = Math.max(-1, ...state.tasks.filter((item) => item.type === type).map((item) => item.order ?? 0));
   const task = { id: Date.now(), name: el("taskName").value.trim(), assignees, completedBy: [], order: maxOrder + 1, due: type === "routine" ? "" : el("taskDue").value, type, done: false };
   state.tasks.unshift(task);
+  if (type === "todo") sortTodosByDue();
   syncTask(task);
   saveTasks();
   closeModal();
@@ -303,8 +342,14 @@ el("nameForm").addEventListener("submit", (event) => {
   showToast("表示名を変更しました");
 });
 
-el("openAddButton").addEventListener("click", () => openModal());
-el("taskType").addEventListener("change", updateDueField);
+document.querySelectorAll("[data-add-type]").forEach((button) => button.addEventListener("click", () => openModal(button.dataset.addType)));
+el("taskDue").addEventListener("click", () => { calendarMonth = new Date(`${el("taskDue").value || getNextWeekFriday()}T00:00:00`); renderDatePicker(); el("datePicker").hidden = false; });
+el("datePicker").addEventListener("click", (event) => {
+  const dateButton = event.target.closest("[data-date]");
+  const moveButton = event.target.closest("[data-calendar-move]");
+  if (dateButton) { el("taskDue").value = dateButton.dataset.date; el("datePicker").hidden = true; }
+  if (moveButton) { calendarMonth.setMonth(calendarMonth.getMonth() + Number(moveButton.dataset.calendarMove)); renderDatePicker(); }
+});
 el("closeModalButton").addEventListener("click", closeModal);
 el("modalBackdrop").addEventListener("click", (event) => { if (event.target === el("modalBackdrop")) closeModal(); });
 el("closeNameModalButton").addEventListener("click", closeNameModal);
@@ -313,6 +358,23 @@ document.querySelectorAll("[data-edit-name]").forEach((button) => button.addEven
 el("editMembersButton").addEventListener("click", openMemberModal);
 el("closeMemberModalButton").addEventListener("click", closeMemberModal);
 el("memberModalBackdrop").addEventListener("click", (event) => { if (event.target === el("memberModalBackdrop")) closeMemberModal(); });
+el("editCalendarButton").addEventListener("click", () => { el("calendarUrlInput").value = state.calendarUrl; el("calendarModalBackdrop").hidden = false; });
+el("closeCalendarModalButton").addEventListener("click", () => { el("calendarModalBackdrop").hidden = true; });
+el("calendarModalBackdrop").addEventListener("click", (event) => { if (event.target === el("calendarModalBackdrop")) el("calendarModalBackdrop").hidden = true; });
+el("calendarForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const calendarUrl = el("calendarUrlInput").value.trim();
+  if (calendarUrl && !calendarUrl.startsWith("https://calendar.google.com/calendar/embed")) {
+    showToast("Googleカレンダーの埋め込みURLを入力してください");
+    return;
+  }
+  state.calendarUrl = calendarUrl;
+  localStorage.setItem("minna-calendar-url", state.calendarUrl);
+  await TeamSync.updateCalendar(state.calendarUrl).catch((error) => showToast(`カレンダーを同期できませんでした: ${error.message}`));
+  el("calendarModalBackdrop").hidden = true;
+  renderCalendarEmbed();
+  showToast("Googleカレンダーを設定しました");
+});
 el("addMemberForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
@@ -353,6 +415,8 @@ async function initializeSharing() {
     const status = await TeamSync.init((shared) => {
       state.tasks = shared.tasks;
       state.names = shared.names;
+      state.calendarUrl = shared.calendarUrl || "";
+      localStorage.setItem("minna-calendar-url", state.calendarUrl);
       members = [{ id: "everyone", name: "全員", initial: "全", color: "everyone" }, ...shared.members];
       saveTasks();
       saveNames();
@@ -393,6 +457,5 @@ el("copyInviteButton").addEventListener("click", async () => {
   showToast("共有URLをコピーしました");
 });
 
-el("todayLabel").textContent = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date());
 render();
 initializeSharing();
