@@ -34,10 +34,10 @@
           <div id="memberList" class="member-list"></div>
         </div>
 
-        <div class="calendar-block">
-          <div class="team-heading"><span>今週の予定</span><button class="edit-name-button" id="editCalendarButton" aria-label="Googleカレンダーを設定" title="Googleカレンダーを設定">✎</button></div>
-          <div id="calendarEmpty" class="calendar-empty">Googleカレンダーを設定すると<br>1週間の予定を表示できます。</div>
-          <iframe id="googleCalendarFrame" class="google-calendar-frame" title="Googleカレンダーの週予定" hidden></iframe>
+        <div class="quick-links">
+          <div class="team-heading"><span>仕事用リンク</span></div>
+          <a class="quick-link-button" href="https://chat.google.com/" target="_blank" rel="noopener noreferrer"><span>Chat</span>Google Chatを開く</a>
+          <a class="quick-link-button portal" href="https://sites.google.com/edu.nishi.or.jp/yamaguchi/" target="_blank" rel="noopener noreferrer"><span>Portal</span>職員用ポータルを開く</a>
         </div>
       </aside>
 
@@ -45,21 +45,21 @@
         <div class="board-grid">
           <section class="task-area" id="todoSection">
             <div class="section-intro">
-              <div><div class="section-title-row"><h2>ToDo</h2><button class="section-add-button" data-add-type="todo" aria-label="ToDoを追加">＋</button></div><p>完了した仕事は期限日まで表示されます。</p></div>
+              <div><div class="section-title-row"><h2>ToDo</h2><button class="section-add-button" data-add-type="todo" aria-label="ToDoを追加"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><p>完了した仕事は期限日まで表示されます。</p></div>
               <div class="filter-group" aria-label="ToDoフィルター">
                 <button class="filter-button active" data-todo-filter="all">通常</button>
                 <button class="filter-button" data-todo-filter="open">未完了</button>
                 <button class="filter-button" data-todo-filter="done">完了</button>
               </div>
             </div>
-            <div class="task-list-header todo-header"><span>担当・完了・タスク</span><span>期限</span><span>順番</span><span></span></div>
+            <div class="task-list-header todo-header"><span>担当・完了・タスク</span><span>順番</span><span></span></div>
             <div id="todoList" class="task-list"></div>
             <div id="todoEmpty" class="empty-state" hidden><div class="empty-check">✓</div><h3>表示するToDoはありません</h3><p>新しい仕事を追加すると、ここに表示されます。</p></div>
           </section>
 
           <section class="task-area routine-area" id="routineSection">
             <div class="section-intro">
-              <div><div class="section-title-row"><h2>ルーティン</h2><button class="section-add-button" data-add-type="routine" aria-label="ルーティンを追加">＋</button></div><p>土曜日にリセットし、次の金曜日まで取り組みます。</p></div>
+              <div><div class="section-title-row"><h2>ルーティン</h2><button class="section-add-button" data-add-type="routine" aria-label="ルーティンを追加"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><p>土曜日にリセットし、次の金曜日まで取り組みます。</p></div>
               <div class="reset-inline"><span>↻</span> 土曜リセット</div>
             </div>
             <div class="task-list-header routine-header"><span>担当・完了・タスク</span><span>順番</span><span></span></div>
@@ -128,17 +128,6 @@
               <button class="primary-button" type="submit">追加</button>
             </div>
           </label>
-        </form>
-      </section>
-    </div>
-    <div class="modal-backdrop" id="calendarModalBackdrop" hidden>
-      <section class="modal name-modal" role="dialog" aria-modal="true" aria-labelledby="calendarModalTitle">
-        <button class="modal-close" id="closeCalendarModalButton" aria-label="閉じる">×</button>
-        <h2 id="calendarModalTitle">Googleカレンダーを設定</h2>
-        <p>Googleカレンダーの設定画面にある「カレンダーの統合」から、埋め込みコード内のURLを貼り付けてください。</p>
-        <form id="calendarForm">
-          <label>埋め込みURL<input id="calendarUrlInput" type="url" placeholder="https://calendar.google.com/calendar/embed?..." /></label>
-          <button class="primary-button submit-button" type="submit">保存する</button>
         </form>
       </section>
     </div>
